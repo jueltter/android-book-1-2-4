@@ -1,10 +1,13 @@
 package ec.dev.samagua.android_book_1_2_4
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -22,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.semantics
@@ -33,7 +37,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
 import ec.dev.samagua.android_book_1_2_4.ui.theme.Androidbook124Theme
-import java.util.UUID
+
+const val FULL_NAME_KEY = "FULL_NAME_KEY"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -43,7 +48,6 @@ class MainActivity : ComponentActivity() {
             Androidbook124Theme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                     FirstFormScreen(
-                        name = "Android",
                         modifier = Modifier.padding(innerPadding)
                     )
                 }
@@ -54,7 +58,7 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun FirstFormScreen(name: String, modifier: Modifier = Modifier) {
+fun FirstFormScreen(modifier: Modifier = Modifier) {
     var fullName by rememberSaveable { mutableStateOf("") }
 
     ConstraintLayout(
@@ -63,7 +67,14 @@ fun FirstFormScreen(name: String, modifier: Modifier = Modifier) {
             .fillMaxWidth()
             .padding(4.dp)
     ) {
-        val (fullNameField, buttonField) = createRefs();
+        val (fullNameField, buttonField) = createRefs()
+        val context = LocalContext.current
+
+        val launcher = rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.StartActivityForResult()
+        ) { _ ->
+            // Handle result if needed
+        }
 
         OutlinedTextField(
             value = fullName,
@@ -86,7 +97,16 @@ fun FirstFormScreen(name: String, modifier: Modifier = Modifier) {
 
         Button(
             onClick = {
-
+                val tmp1 = fullName.trim()
+                if (tmp1.isNotBlank()) {
+                    // Set the name of the Activity to launch
+                    val welcomeIntent = Intent(context, WelcomeActivity::class.java)
+                    welcomeIntent.putExtra(FULL_NAME_KEY, fullName)
+                    launcher.launch(welcomeIntent)
+                }
+                else {
+                    Toast.makeText(context, R.string.full_name_label, Toast.LENGTH_LONG).show()
+                }
             },
             colors = ButtonDefaults.buttonColors(
                 containerColor = Color.Black,  // button color
@@ -116,6 +136,6 @@ fun FirstFormScreen(name: String, modifier: Modifier = Modifier) {
 @Composable
 fun FirstFormScreenPreview() {
     Androidbook124Theme {
-        FirstFormScreen("Android")
+        FirstFormScreen()
     }
 }
